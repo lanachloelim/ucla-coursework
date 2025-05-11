@@ -22,8 +22,6 @@ Each folder contains subfolders for individual courses (e.g., `/cs/111`, `/ece/3
 
 ## About Me
 
-Hi I'm Lana! 
-
 Check out other projects I've worked on [here](https://github.com/lanachloelim). 
 
 Connect with me on [LinkedIn](https://www.linkedin.com/in/lana-chloe-lim-8b871a221/) or visit my [personal website](https://lanachloelim.github.io)! :)
