@@ -1,5 +1,3 @@
----
-
 # UCLA EC ENGR 3: Final Project
 
 ## Line Follower Car
