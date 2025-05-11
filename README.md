@@ -1,4 +1,4 @@
-# UCLA Coursework Projects
+# UCLA Coursework 
 
 Welcome! Here you'll find an archive of impactful coursework I completed as an undergraduate at UCLA from 2021-2025.
 
