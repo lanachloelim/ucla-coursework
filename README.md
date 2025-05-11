@@ -1,17 +1,16 @@
 # UCLA Coursework Projects
 
-Welcome! This repository is a curated archive of the work I've completed during my undergraduate studies at UCLA, covering COM SCI, EC ENGR, MATH, and PHYSICS courses. 
+Welcome! Here you'll find an archive of impactful coursework I completed as an undergraduate at UCLA from 2021-2025.
 
-## Purpose
+## Content
 
-Highlights:
 - Projects
 - Labs
 - Other substantial coursework
 
 **Note:** This collection does **not** include any midterm or final exam materials.
 
-## Contents
+## Organization
 
 - **/cs/** — COM SCI 
 - **/ece/** — EC ENGR 
