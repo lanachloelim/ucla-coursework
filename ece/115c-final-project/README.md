@@ -12,9 +12,11 @@ Built a circuit that flags whether the magnitude of a signed 4-bit input exceeds
 3. Joint gate-sizing + supply-voltage optimisation to hit the 1.4×-delay target with minimum energy.
 
 ## Repository Structure:
+```plaintext
 /docs    → project report, slides
 /src     → schematic netlists
 /spice   → LTspice test-benches and schematics
 /scripts → sizing & optimisation notebooks, testing scripts
+```
 
 ## Project Stats:
