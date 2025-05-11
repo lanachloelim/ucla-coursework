@@ -19,5 +19,5 @@ Built a circuit that flags whether the magnitude of a signed 4-bit input exceeds
 /scripts → sizing & optimisation notebooks, testing scripts
 ```
 
-## Project Stats (Team #14):
+## Project Stats (Team 14):
 ![image](https://github.com/user-attachments/assets/8e5626e0-b066-47e6-b712-e08521a3af64)
