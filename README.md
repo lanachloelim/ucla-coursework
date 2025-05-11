@@ -11,11 +11,12 @@ Welcome! Here you'll find an archive of impactful coursework I completed as an u
 **Note:** This collection does **not** include any midterm or final exam materials.
 
 ## Organization
-
-- **/cs/** — COM SCI 
-- **/ece/** — EC ENGR 
-- **/math/** — MATH 
-- **/physics/** — PHYSICS 
+```plaintext
+/cs/        → COM SCI coursework
+/ece/       → EC ENGR coursework
+/math/      → MATH coursework
+/physics/   → PHYSICS coursework
+```
 
 Each folder contains subfolders for individual courses (e.g., `/cs/111`, `/ece/3`, `/math/131a`, etc.).
 
