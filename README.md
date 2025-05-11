@@ -2,7 +2,7 @@
 
 Welcome! This repository is a curated archive of the work I've completed during my undergraduate studies at UCLA, covering COM SCI, EC ENGR, MATH, and PHYSICS courses. 
 
-## °❀⋆.ೃ࿔*･ Purpose
+## Purpose
 
 Highlights:
 - Projects
@@ -11,16 +11,16 @@ Highlights:
 
 **Note:** This collection does **not** include any midterm or final exam materials.
 
-## ⋆౨ৎ˚⟡˖ Contents
+## Contents
 
 - **/cs/** — COM SCI 
-- **/ee/** — EC ENGR 
+- **/ece/** — EC ENGR 
 - **/math/** — MATH 
 - **/physics/** — PHYSICS 
 
-Each folder contains subfolders for individual courses (e.g., `cs111`, `ee115C`, `math33A`).
+Each folder contains subfolders for individual courses (e.g., `/cs/111`, `/ece/3`, `/math/131a`, etc.).
 
-## 𝜗𝜚˚⋆｡☆ About Me
+## About Me
 
 Hi I'm Lana! 
 
