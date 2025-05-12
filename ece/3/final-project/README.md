@@ -13,4 +13,5 @@ The goal was to program a TI-RSLK car (using Arduino IDE) to follow a gradient p
 
 ### Project Demo
 
-https://github.com/user-attachments/assets/105602eb-d42f-4c7e-a
+https://github.com/user-attachments/assets/105602eb-d42f-4c7e-a40e-eb1f197ecfa0
+
