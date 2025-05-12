@@ -1,0 +1,31 @@
+======================
+RSat 2.0 Release Notes
+======================
+
+RSat 2.0 is the version that participated in the SAT'07 competition.
+It is licensed only for educational and non-commercial use. 
+The authors provide no guarantee of any kind.
+
+Please send any question/comment to rsat@cs.ucla.edu.
+
+RSat 2.0 uses the SatELite preprocessor. The official website of the preprocessor 
+is http://www.cs.chalmers.se/Cs/Research/FormalMethods/MiniSat/SatELite.html.
+
+==================
+Compiling RSat 2.0
+==================
+
+Run 'build.sh'. This script will build both the preprocessor and the solver.
+
+RSat 2.0 has been successfully compiled by GCC on both cygwin and linux.
+
+==============
+Using RSat 2.0
+==============
+
+To run RSat, at prompt, run
+
+./rsat.sh <cnf-filename>
+
+
+Note that this version of RSat is intended to be run with the preprocessor. 
