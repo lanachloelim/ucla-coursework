@@ -25,3 +25,6 @@ This project explores the use of Large Language Models (LLMs), specifically Open
 - Used as a base for the semi-automatic evaluation tool. The decoder was replaced with a binary classification head to automatically assess whether code repairs were successful.
 
 ---
+
+### Acknowledgements
+Group project by Lana Lim, Vinay Shukla, Brian Felipe Brito, and Steven Pan. Assistance from Prof. Yuan Tian and TA Ying Li.
