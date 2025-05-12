@@ -1,0 +1,52 @@
+Please rewrite the following code and fix the security vulnerability. Here are a few examples.
+Function Name: get
+Vulnerability: cwe-079
+Code:
+@auth.public
+def get(self, build_id):
+    try:
+        build_id = int(build_id)
+    except ValueError as ex:
+        self.response.write(ex.message)
+        self.abort(400)
+
+    build = model.Build.get_by_id(build_id)
+    can_view = build and user.can_view_build_async(build).get_result()
+
+    if not can_view:
+        if auth.get_current_identity().is_anonymous:
+            return self.redirect(gae_users.create_login_url(self.request.url))
+        self.response.write('build %d not found' % build_id)
+        self.abort(404)
+
+    return self.redirect(str(build.url))
+
+Explanation: cwe-079 is improper neutralization of input during web page generation. In this function, when we execute self.response.write(ex.message) to write a response, ex.message could contain malicious inputs or user-controlled information. Hence, making this code vulnerable.
+Answer:
+@auth.public
+def get(self, build_id):
+    try:
+        build_id = int(build_id)
+    except ValueError:
+        self.response.write('invalid build id')
+        self.abort(400)
+
+    build = model.Build.get_by_id(build_id)
+    can_view = build and user.can_view_build_async(build).get_result()
+
+    if not can_view:
+        if auth.get_current_identity().is_anonymous:
+            return self.redirect(self.create_login_url(self.request.url))
+        self.response.write('build %d not found' % build_id)
+        self.abort(404)
+
+    return self.redirect(str(build.url))
+
+Function Name: *func_name*
+Vulnerability: cwe-079
+Code: 
+*func_src_before*
+
+Explanation:
+Answer:
+

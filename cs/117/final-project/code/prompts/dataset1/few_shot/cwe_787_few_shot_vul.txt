@@ -1,0 +1,49 @@
+Please rewrite the following code and fix the security vulnerability. Here are a few examples.
+Function Name: concat_opt_exact_str
+Vulnerability: cwe-078
+Code:
+concat_opt_exact_str(OptStr* to, UChar* s, UChar* end, OnigEncoding enc)
+{
+  int i, j, len;
+  UChar *p;
+
+  for (i = to->len, p = s; p < end && i < OPT_EXACT_MAXLEN; ) {
+    len = enclen(enc, p);
+    if (i + len > OPT_EXACT_MAXLEN) break;
+    for (j = 0; j < len && p < end; j++)
+      to->s[i++] = *p++;
+  }
+
+  to->len = i;
+
+  if (p >= end)
+    to->reach_end = 1;
+}
+
+Explanation:
+Answer:
+concat_opt_exact_str(OptStr* to, UChar* s, UChar* end, OnigEncoding enc)
+{
+  int i, j, len;
+  UChar *p;
+
+  for (i = to->len, p = s; p < end && i < OPT_EXACT_MAXLEN; ) {
+    len = enclen(enc, p);
+    if (i + len >= OPT_EXACT_MAXLEN) break;
+    for (j = 0; j < len && p < end; j++)
+      to->s[i++] = *p++;
+  }
+
+  to->len = i;
+
+  if (p >= end)
+    to->reach_end = 1;
+}
+
+Function Name: *func_name*
+Vulnerability: cwe-078
+Code: 
+*func_src_before*
+
+Answer:
+

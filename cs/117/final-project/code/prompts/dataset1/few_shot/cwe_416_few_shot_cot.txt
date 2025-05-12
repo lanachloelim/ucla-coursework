@@ -1,0 +1,37 @@
+Please rewrite the following code and fix the security vulnerability. Here are a few examples.
+Function Name: disk_seqf_stop
+Vulnerability: cwe-416
+Code:
+static void disk_seqf_stop(struct seq_file *seqf, void *v)
+{
+    struct class_dev_iter *iter = seqf->private;
+
+    /* stop is called even after start failed :-( */
+    if (iter) {
+        class_dev_iter_exit(iter);
+        kfree(iter);
+    }
+}
+
+Explanation: cwe-416 is use after free. In this case, we freeded iter which is also the object pointed to by seqf->private. However, we should set it to NULL instead of allowing it to dangle, preventing undefined behavior.
+Answer:
+static void disk_seqf_stop(struct seq_file *seqf, void *v)
+{
+    struct class_dev_iter *iter = seqf->private;
+
+    /* stop is called even after start failed :-( */
+    if (iter) {
+        class_dev_iter_exit(iter);
+        kfree(iter);
+        seqf->private = NULL;
+    }
+}
+
+Function Name: *func_name*
+Vulnerability: cwe-416
+Code: 
+*func_src_before*
+
+Explanation:
+Answer:
+

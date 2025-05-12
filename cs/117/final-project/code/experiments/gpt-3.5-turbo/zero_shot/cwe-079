@@ -1,0 +1,85 @@
+void PeerListWidget::updatePeer(const QString &ip, BitTorrent::TorrentHandle *const torrent, const BitTorrent::PeerInfo &peer)
+{
+    QStandardItem *item = m_peerItems.value(ip);
+    int row = item->row();
+    if (m_resolveCountries) {
+        const QIcon ico = GuiIconProvider::instance()->getFlagIcon(peer.country());
+        if (!ico.isNull()) {
+            m_listModel->setData(m_listModel->index(row, PeerListDelegate::COUNTRY), ico, Qt::DecorationRole);
+            const QString countryName = Net::GeoIPManager::CountryName(peer.country());
+            m_listModel->setData(m_listModel->index(row, PeerListDelegate::COUNTRY), countryName, Qt::ToolTipRole);
+            m_missingFlags.remove(ip);
+        }
+    }
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::CONNECTION), peer.connectionType());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::PORT), peer.address().port);
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS), peer.flags());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS), peer.flagsDescription(), Qt::ToolTipRole);
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::CLIENT), peer.client());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::PROGRESS), peer.progress());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::DOWN_SPEED), peer.payloadDownSpeed());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::UP_SPEED), peer.payloadUpSpeed());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_DOWN), peer.totalDownload());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_UP), peer.totalUpload());
+    m_listModel->setData(m_listModel->index(row, PeerListDelegate::RELEVANCE), peer.relevance());
+    QStringList downloadingFiles(torrent->info().filesForPiece(peer.downloadingPieceIndex()));
+    QString downloadingFilesString = downloadingFiles.join(QLatin1String(";"));
+    if (downloadingFilesString.length() > 0) {
+        m_listModel->setData(m_listModel->index(row, PeerListDelegate::DOWNLOADING_PIECE), downloadingFilesString);
+        m_listModel->setData(m_listModel->index(row, PeerListDelegate::DOWNLOADING_PIECE), downloadingFilesString.join(QLatin1String("\n")), Qt::ToolTipRole);
+    }
+}
+
+def redirect(self, url, **kwargs):
+    """Explicitly converts url to 'str', because webapp2.RequestHandler.redirect
+    strongly requires 'str' but url might be an unicode string."""
+    super(Handler, self).redirect(str(url), **kwargs)
+
+def get_value(self):
+    if self.column.render_function:
+        # We don't want to escape our html
+        return self.column.render_function(self.object)
+
+    field = getattr(self.object, self.column.field_name) if self.column.field_name else None
+    if isinstance(self.object, dict):
+        value = self.object.get(self.column.field_name)
+    elif callable(field):
+        value = field() if getattr(field, 'do_not_call_in_templates', False) else field
+    else:
+        display_function = getattr(self.object, 'get_%s_display' % self.column.field_name, False)
+        value = display_function() if display_function else field
+
+    return escape(str(value))
+
+http_error_t::make_body(int n, const str &si, const str &aux) {
+  strbuf b;
+  str ldesc;
+  const str sdesc = http_status.get_desc(n, &ldesc);
+  b << "<html>\n"
+    << " <head>\n"
+    << "  <title>" << n << " " << sdesc << "</title>\n"
+    << " </head>\n"
+    << " <body>\n"
+    << " <h1>Error " << n << " " << sdesc << "</h1><br><br>\n";
+  
+  if (n == HTTP_NOT_FOUND && !aux.empty()) {
+    b << "The file <tt>" << aux
+      << "</tt> was not found on this server.<br><br>\n\n";
+  }
+  
+  b << "  <hr>\n"
+    << "  <i>" << si << "</i>\n"
+    << " <br>\n"
+    << " </body>\n"
+    << "</html>\n";
+  
+  return html_escape(b);
+}
+
+def list_editor_workflows(request):  
+  workflows = [d.content_object.to_dict() for d in Document.objects.filter(user=request.user, doc_type= Document2, extra='workflow2')]
+
+  return render(request, 'editor/list_editor_workflows.mako', {
+      'workflows_json': json.dumps(workflows)
+  })
+

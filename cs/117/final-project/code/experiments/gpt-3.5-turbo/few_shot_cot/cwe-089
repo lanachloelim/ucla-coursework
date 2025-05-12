@@ -1,0 +1,1 @@
+["def likeComments(self, commentid, userid):\n        sqlText = \"insert into comment_like values(?, ?);\"\n        result = sql.insertDB(self.conn, sqlText, (userid, commentid))\n        return result;"]

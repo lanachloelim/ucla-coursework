@@ -1,0 +1,5 @@
+Please rewrite the following code and fix the security vulnerability. Only include code in your output.
+Function Name: *func_name*
+Vulnerability: *vul_type*
+Code:
+*func_src_before*

@@ -1,0 +1,78 @@
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line 19: m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS), peer.flags());
+2. Line 20: m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS), peer.flagsDescription(), Qt::ToolTipRole);
+3. Line 21: m_listModel->setData(m_listModel->index(row, PeerListDelegate::CLIENT), peer.client());
+4. Line 22: m_listModel->setData(m_listModel->index(row, PeerListDelegate::PROGRESS), peer.progress());
+5. Line 23: m_listModel->setData(m_listModel->index(row, PeerListDelegate::DOWN_SPEED), peer.payloadDownSpeed());
+6. Line 24: m_listModel->setData(m_listModel->index(row, PeerListDelegate::UP_SPEED), peer.payloadUpSpeed());
+7. Line 25: m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_DOWN), peer.totalDownload());
+8. Line 26: m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_UP), peer.totalUpload());
+9. Line 27: m_listModel->setData(m_listModel->index(row, PeerListDelegate::RELEVANCE), peer.relevance());
+10. Line 28: QStringList downloadingFiles(torrent->info().filesForPiece(peer.downloadingPieceIndex()));
+
+Line-level repair:
+1. Line 19: m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS), peer.flags(), Qt::DisplayRole);
+2. Line 20: m_listModel->setData(m_listModel->index(row, PeerListDelegate::FLAGS_DESCRIPTION), peer.flagsDescription(), Qt::ToolTipRole);
+3. Line 21: m_listModel->setData(m_listModel->index(row, PeerListDelegate::CLIENT), peer.client(), Qt::DisplayRole);
+4. Line 22: m_listModel->setData(m_listModel->index(row, PeerListDelegate::PROGRESS), peer.progress(), Qt::DisplayRole);
+5. Line 23: m_listModel->setData(m_listModel->index(row, PeerListDelegate::DOWN_SPEED), peer.payloadDownSpeed(), Qt::DisplayRole);
+6. Line 24: m_listModel->setData(m_listModel->index(row, PeerListDelegate::UP_SPEED), peer.payloadUpSpeed(), Qt::DisplayRole);
+7. Line 25: m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_DOWN), peer.totalDownload(), Qt::DisplayRole);
+8. Line 26: m_listModel->setData(m_listModel->index(row, PeerListDelegate::TOT_UP), peer.totalUpload(), Qt::DisplayRole);
+9. Line 27: m_listModel->setData(m_listModel->index(row, PeerListDelegate::RELEVANCE), peer.relevance(), Qt::DisplayRole);
+10. Line 28: QStringList downloadingFiles(torrent->info().filesForPiece(peer.downloadingPieceIndex()));
+
+=== END RETURN TEMPLATE ===
+
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line 3: super(Handler, self).redirect(str(url), **kwargs)
+
+Line-level repair:
+1. Line 3: super(Handler, self).redirect(str(url.encode('utf-8')), **kwargs)
+=== END RETURN TEMPLATE ===
+
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line 13:value = self.object.get(self.column.field_name)
+2. Line 15:value = field() if getattr(field, 'do_not_call_in_templates', False) else field
+3. Line 17:value = display_function() if display_function else field
+4. Line 19:return escape(value)
+
+Line-level repair:
+1. Line 13:value = escape(self.object.get(self.column.field_name))
+2. Line 15:if callable(field): value = escape(field()) if getattr(field, 'do_not_call_in_templates', False) else escape(field)
+3. Line 17:display_value = display_function() if display_function else field
+4. Line 19:return escape(display_value)
+=== END RETURN TEMPLATE ===
+
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line 12: b << "<html>\n"
+2. Line 13: b << " <head>\n"
+3. Line 14: b << "  <title>" << n << " " << sdesc << "</title>\n"
+4. Line 15: b << " </head>\n"
+5. Line 16: b << " <body>\n"
+6. Line 17: b << " <h1>Error " << n << " " << sdesc << "</h1><br><br>\n"
+7. Line 21: b << "The file <tt>" << aux << "</tt> was not found on this server.<br><br>\n\n"
+8. Line 23: b << "  <hr>\n"
+9. Line 24: b << "  <i>" << si << "</i>\n"
+10. Line 25: b << " <br>\n"
+
+Line-level repair:
+1. Line 14: b << "  <title>Error " << n << " " << sdesc << "</title>\n"
+2. Line 21: if (n == HTTP_NOT_FOUND && !aux) {
+3. Line 24: b << "  <i>" << si.escape_html() << "</i>\n"
+=== END RETURN TEMPLATE ===
+
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line 2: workflows = [d.content_object.to_dict() for d in Document.objects.get_docs(request.user, Document2, extra='workflow2')]
+2. Line 4: 'workflows_json': json.dumps(workflows)
+
+Line-level repair:
+1. Line 2: workflows = [d.content_object.to_dict() for d in Document.objects.filter(user=request.user, doc_type=Document2, extra='workflow2')]
+2. Line 4: 'workflows_json': json.dumps(workflows, default=str)
+=== END RETURN TEMPLATE ===
+

@@ -1,0 +1,1117 @@
+void search_make_new(const struct search_state *const state, int n, const char *const base_name) {
+	const size_t base_len = strlen(base_name);
+	const char need_to_append_dot = base_name[base_len - 1] == '.' ? 0 : 1;
+	struct search_domain *dom;
+
+	for (dom = state->head; dom; dom = dom->next) {
+		if (n <= 0) {
+			/* this is the postfix we want */
+			/* the actual postfix string is kept at the end of the structure */
+			const u8 *const postfix = ((u8 *) dom) + sizeof(struct search_domain);
+			const int postfix_len = dom->len;
+			char *newname = (char *)malloc(base_len + need_to_append_dot + postfix_len + 1);
+			if (!newname) return NULL;
+			memcpy(newname, base_name, base_len);
+			if (need_to_append_dot) newname[base_len] = '.';
+			memcpy(newname + base_len + need_to_append_dot, postfix, postfix_len);
+			newname[base_len + need_to_append_dot + postfix_len] = 0;
+			return newname;
+		}
+	}
+
+	/* we ran off the end of the list and still didn't find the requested string */
+	// Add appropriate error handling here
+}
+
+int TS_OBJ_print_bio(BIO *bio, const ASN1_OBJECT *obj)
+{
+    char obj_txt[128];
+
+    int len = i2t_ASN1_OBJECT(obj, obj_txt, sizeof(obj_txt));
+    BIO_write(bio, obj_txt, len);
+    BIO_write(bio, "\n", 1);
+
+    OPENSSL_cleanse(obj_txt, sizeof(obj_txt)); // Clearing sensitive data
+
+    return 1;
+}
+
+int main(int argc, char *argv[])
+{
+    FILE *iplist = NULL;
+    plist_t root_node = NULL;
+    char *plist_out = NULL;
+    uint32_t size = 0;
+    int read_size = 0;
+    char *plist_entire = NULL;
+    struct stat filestats;
+    options_t *options = parse_arguments(argc, argv);
+
+    if (!options)
+    {
+        print_usage(argc, argv);
+        return 0;
+    }
+
+    // read input file
+    iplist = fopen(options->in_file, "rb");
+    if (!iplist) {
+        free(options);
+        return 1;
+    }
+
+    if (stat(options->in_file, &filestats) != 0) {
+        fclose(iplist);
+        free(options);
+        return 1;
+    }
+
+    plist_entire = (char *) malloc(sizeof(char) * (filestats.st_size + 1));
+    read_size = fread(plist_entire, sizeof(char), filestats.st_size, iplist);
+    fclose(iplist);
+
+    // convert from binary to xml or vice-versa
+    if (memcmp(plist_entire, "bplist00", 8) == 0)
+    {
+        plist_from_bin(plist_entire, read_size, &root_node);
+        plist_to_xml(root_node, &plist_out, &size);
+    }
+    else
+    {
+        plist_from_xml(plist_entire, read_size, &root_node);
+        plist_to_bin(root_node, &plist_out, &size);
+    }
+    plist_free(root_node);
+    free(plist_entire);
+
+    if (plist_out)
+    {
+        if (options->out_file != NULL)
+        {
+            FILE *oplist = fopen(options->out_file, "wb");
+            if (!oplist) {
+                free(options);
+                return 1;
+            }
+            fwrite(plist_out, sizeof(char), size, oplist);
+            fclose(oplist);
+        }
+        // if no output file specified, write to stdout
+        else
+            fwrite(plist_out, sizeof(char), size, stdout);
+
+        free(plist_out);
+    }
+    else
+        printf("ERROR: Failed to convert input file.\n");
+
+    free(options);
+    return 0;
+}
+
+```c
+guint16 key_bytes_len = 0; /* Length of the total key data field */
+guint8 new_key[32];
+rc4_state_struct rc4_state;
+
+if (key_bytes_len < GROUP_KEY_MIN_LEN || key_bytes_len > eapol_len - sizeof(EAPOL_RSN_KEY)) {
+    return AIRPDCAP_RET_NO_VALID_HANDSHAKE;
+}
+
+szEncryptedKey = g_memdup(key_data, key_bytes_len);
+if (!szEncryptedKey) {
+    return AIRPDCAP_RET_NO_VALID_HANDSHAKE;
+}
+
+if (key_version == AIRPDCAP_WPA_KEY_VER_NOT_CCMP){
+    /* TKIP key */
+    sa->wpa.key_ver = (key_bytes_len >= TKIP_GROUP_KEY_LEN) ? AIRPDCAP_WPA_KEY_VER_NOT_CCMP : AIRPDCAP_WPA_KEY_VER_AES_CCMP;
+
+    /* Build the full decryption key based on the IV and part of the pairwise key */
+    memcpy(new_key, pEAPKey->key_iv, 16);
+    memcpy(new_key+16, decryption_key, 16);
+
+    crypt_rc4_init(&rc4_state, new_key, sizeof(new_key));
+    crypt_rc4(&rc4_state, dummy, 256);
+    crypt_rc4(&rc4_state, szEncryptedKey, key_bytes_len);
+
+} else if (key_version == AIRPDCAP_WPA_KEY_VER_AES_CCMP){
+    /* AES CCMP key */
+
+    guint8 key_found;
+    guint8 key_length;
+    guint16 key_index;
+    guint8 *decrypted_data;
+
+    decrypted_data = AES_unwrap(decryption_key, 16, szEncryptedKey, key_bytes_len);
+
+    key_found = FALSE;
+    key_index = 0;
+
+    while(key_index < (key_bytes_len - 6) && !key_found){
+        guint8 rsn_id;
+        guint32 type;
+
+        rsn_id = decrypted_data[key_index];
+        type = ((decrypted_data[key_index + 2] << 24) +
+                (decrypted_data[key_index + 3] << 16) +
+                (decrypted_data[key_index + 4] << 8) +
+                (decrypted_data[key_index + 5]));
+
+        if (rsn_id == 0xdd && type == 0x000fac01) {
+            key_found = TRUE;
+        } else {
+            key_index += decrypted_data[key_index+1]+2;
+        }
+    }
+
+    if (!key_found){
+        g_free(decrypted_data);
+        g_free(szEncryptedKey);
+        return AIRPDCAP_RET_NO_VALID_HANDSHAKE;
+    }
+
+    key_length = decrypted_data[key_index+1] - 6;
+    
+    if (key_length == TKIP_GROUP_KEY_LEN){
+        sa->wpa.key_ver = AIRPDCAP_WPA_KEY_VER_NOT_CCMP;
+    } else {
+        sa->wpa.key_ver = AIRPDCAP_WPA_KEY_VER_AES_CCMP;
+    }
+
+    memcpy(szEncryptedKey, decrypted_data+key_index+8, key_length);
+
+    g_free(decrypted_data);
+}
+
+key_len = (sa->wpa.key_ver==AIRPDCAP_WPA_KEY_VER_NOT_CCMP)?TKIP_GROUP_KEY_LEN:CCMP_GROUP_KEY_LEN;
+
+if (key_len > key_bytes_len) {
+    g_free(szEncryptedKey);
+    return AIRPDCAP_RET_NO_VALID_HANDSHAKE;
+}
+
+DEBUG_DUMP("Broadcast key:", szEncryptedKey, key_len);
+
+sa->key = &dummy_key;
+sa->validKey = TRUE;
+
+memset(sa->wpa.ptk, 0, sizeof(sa->wpa.ptk));
+memcpy(sa->wpa.ptk+32, szEncryptedKey, key_len);
+g_free(szEncryptedKey);
+
+return AIRPDCAP_RET_SUCCESS_HANDSHAKE;
+}
+```
+
+MagickExport Image *AdaptiveThresholdImage(const Image *image,
+  const size_t width,const size_t height,const double bias,
+  ExceptionInfo *exception)
+{
+  MagickBooleanType
+    status;
+
+  CacheView
+    *image_view,
+    *threshold_view;
+
+  Image
+    *threshold_image;
+
+  MagickOffsetType
+    progress;
+
+  MagickSizeType
+    number_pixels;
+
+  ssize_t
+    y;
+
+  assert(image != (Image *) NULL);
+  assert(image->signature == MagickCoreSignature);
+  if (image->debug != MagickFalse)
+    (void) LogMagickEvent(TraceEvent,GetMagickModule(),"%s",image->filename);
+  assert(exception != (ExceptionInfo *) NULL);
+  assert(exception->signature == MagickCoreSignature);
+
+  threshold_image=CloneImage(image,0,0,MagickTrue,exception);
+  if (threshold_image == (Image *) NULL)
+    return((Image *) NULL);
+
+  status=SetImageStorageClass(threshold_image,DirectClass,exception);
+  if (status == MagickFalse)
+    {
+      threshold_image=DestroyImage(threshold_image);
+      return((Image *) NULL);
+    }
+
+  status=MagickTrue;
+  progress=0;
+  number_pixels=(MagickSizeType) width*height;
+  image_view=AcquireVirtualCacheView(image,exception);
+  threshold_view=AcquireAuthenticCacheView(threshold_image,exception);
+
+  for (y=0; y < (ssize_t) image->rows; y++)
+  {
+    double
+      channel_bias[MaxPixelChannels],
+      channel_sum[MaxPixelChannels];
+
+    register const Quantum
+      *magick_restrict p,
+      *magick_restrict pixels;
+
+    register Quantum
+      *magick_restrict q;
+
+    register ssize_t
+      i,
+      x;
+
+    ssize_t
+      center,
+      u,
+      v;
+
+    if (status == MagickFalse)
+      continue;
+    p=GetCacheViewVirtualPixels(image_view,-((ssize_t) width/2L),y-(ssize_t)
+      (height/2L),image->columns+width,height,exception);
+    q=QueueCacheViewAuthenticPixels(threshold_view,0,y,threshold_image->columns,
+      1,exception);
+    if ((p == (const Quantum *) NULL) || (q == (Quantum *) NULL))
+      {
+        status=MagickFalse;
+        continue;
+      }
+    center=(ssize_t) GetPixelChannels(image)*(image->columns+width)*(height/2L)+
+      GetPixelChannels(image)*(width/2);
+    for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+    {
+      PixelChannel channel = GetPixelChannelChannel(image,i);
+      PixelTrait traits = GetPixelChannelTraits(image,channel);
+      PixelTrait threshold_traits=GetPixelChannelTraits(threshold_image,
+        channel);
+      if ((traits == UndefinedPixelTrait) ||
+          (threshold_traits == UndefinedPixelTrait))
+        continue;
+      if ((threshold_traits & CopyPixelTrait) != 0)
+        {
+          SetPixelChannel(threshold_image,channel,p[center+i],q);
+          continue;
+        }
+      pixels=p;
+      channel_bias[channel]=0.0;
+      channel_sum[channel]=0.0;
+      for (v=0; v < (ssize_t) height; v++)
+      {
+        for (u=0; u < (ssize_t) width; u++)
+        {
+          if (u == (ssize_t) (width-1))
+            channel_bias[channel]+=pixels[i];
+          channel_sum[channel]+=pixels[i];
+          pixels+=GetPixelChannels(image);
+        }
+        pixels+=GetPixelChannels(image)*image->columns;
+      }
+    }
+    for (x=0; x < (ssize_t) image->columns; x++)
+    {
+      for (i=0; i < (ssize_t) GetPixelChannels(image); i++)
+      {
+        double
+          mean;
+
+        PixelChannel channel = GetPixelChannelChannel(image,i);
+        PixelTrait traits = GetPixelChannelTraits(image,channel);
+        PixelTrait threshold_traits=GetPixelChannelTraits(threshold_image,
+          channel);
+        if ((traits == UndefinedPixelTrait) ||
+            (threshold_traits == UndefinedPixelTrait))
+          continue;
+        if ((threshold_traits & CopyPixelTrait) != 0)
+        {
+          SetPixelChannel(threshold_image,channel,p[center+i],q);
+          continue;
+        }
+        channel_sum[channel]-=channel_bias[channel];
+        channel_bias[channel]=0.0;
+        pixels=p;
+        for (v=0; v < (ssize_t) height; v++)
+        {
+          channel_bias[channel]+=pixels[i];
+          pixels+=(width-1)*GetPixelChannels(image);
+          channel_sum[channel]+=pixels[i];
+          pixels+=GetPixelChannels(image)*(image->columns+1);
+        }
+        mean=(double) (channel_sum[channel]/number_pixels+bias);
+        SetPixelChannel(threshold_image,channel,(Quantum) ((double)
+          p[center+i] <= mean ? 0 : QuantumRange),q);
+      }
+      p+=GetPixelChannels(image);
+      q+=GetPixelChannels(threshold_image);
+    }
+    if (SyncCacheViewAuthenticPixels(threshold_view,exception) == MagickFalse)
+      status=MagickFalse;
+    if (image->progress_monitor != (MagickProgressMonitor) NULL)
+      {
+        MagickBooleanType
+          proceed;
+
+        progress++;
+        proceed=SetImageProgress(image,AdaptiveThresholdImageTag,progress,
+          image->rows);
+        if (proceed == MagickFalse)
+          status=MagickFalse;
+      }
+    }
+    threshold_image->type=image->type;
+    threshold_view=DestroyCacheView(threshold_view);
+    image_view=DestroyCacheView(image_view);
+    if (status == MagickFalse)
+      threshold_image=DestroyImage(threshold_image);
+    return(threshold_image);
+}
+
+void INST_HANDLER(lds) {
+    uint8_t d = ((buf[0] >> 4) & 0xf) | ((buf[1] & 0x1) << 4);
+    uint16_t k = (buf[3] << 8) | buf[2);
+    op->ptr = k;
+
+    // Ensure that k is within the bounds of the RAM
+    if (k < RAM_SIZE) {
+        // Load value from RAMPD:k
+        __generic_ld_st(op, "ram", 0, 1, 0, k, 0);
+        ESIL_A("r%d,=,", d);
+    } else {
+        // Handle error or throw exception for out of bounds access
+    }
+}
+
+static int jpeg_size(const unsigned char* data, const unsigned int data_size, int* width, int* height)
+{
+    unsigned int i = 0;
+    if (i + 3 < data_size && data[i] == 0xFF && data[i+1] == 0xD8 &&
+            data[i+2] == 0xFF && data[i+3] == 0xE0) {
+        i += 4;
+        if(i + 6 < data_size &&
+                data[i+2] == 'J' && data[i+3] == 'F' && data[i+4] == 'I' &&
+                data[i+5] == 'F' && data[i+6] == 0x00) {
+            unsigned short block_length = data[i] * 256 + data[i+1];
+            while(i<data_size) {
+                i+=block_length;
+                if((i + 1) >= data_size)
+                    return -1;
+                if(data[i] != 0xFF)
+                    return -1;
+                if(data[i+1] == 0xC0) {
+                    *height = data[i+5]*256 + data[i+6];
+                    *width = data[i+7]*256 + data[i+8];
+                    return 0;
+                }
+                i+=2;
+                block_length = data[i] * 256 + data[i+1];
+            }
+        }
+    }
+
+    return -1;
+}
+
+```cpp
+static INLINE BOOL RLEDECOMPRESS(const BYTE* pbSrcBuffer, UINT32 cbSrcBuffer, BYTE* pbDestBuffer, UINT32 rowDelta, UINT32 width, UINT32 height)
+{
+	const BYTE* pbSrc = pbSrcBuffer;
+	const BYTE* pbEnd;
+	const BYTE* pbDestEnd;
+	BYTE* pbDest = pbDestBuffer;
+	PIXEL temp;
+	PIXEL fgPel = WHITE_PIXEL;
+	BOOL fInsertFgPel = FALSE;
+	BOOL fFirstLine = TRUE;
+	BYTE bitmask;
+	PIXEL pixelA, pixelB;
+	UINT32 runLength;
+	UINT32 code;
+	UINT32 advance;
+	RLEEXTRA;
+
+	if ((rowDelta == 0) || (rowDelta < width) || !pbSrcBuffer || !pbDestBuffer)
+		return FALSE;
+
+	pbEnd = pbSrcBuffer + cbSrcBuffer;
+	pbDestEnd = pbDestBuffer + rowDelta * height;
+	
+	// Rest of the code remains the same
+}
+```
+
+```c
+jas_image_t *jp2_decode(jas_stream_t *in, const char *optstr)
+{
+    jp2_dec_t *dec = 0;
+    jp2_box_t *box = 0;
+    jas_image_t *image = 0;
+    jp2_cmapent_t *cmapent;
+    jas_icchdr_t icchdr;
+    jas_iccprof_t *iccprof;
+
+    dec = jp2_dec_create();
+    if (!dec) {
+        goto error;
+    }
+
+    box = jp2_box_get(in);
+    if (!box || box->type != JP2_BOX_JP || box->data.jp.magic != JP2_JP_MAGIC) {
+        goto error;
+    }
+    jp2_box_destroy(box);
+    box = 0;
+
+    box = jp2_box_get(in);
+    if (!box || box->type != JP2_BOX_FTYP) {
+        goto error;
+    }
+    jp2_box_destroy(box);
+    box = 0;
+
+    int found = 0;
+    while ((box = jp2_box_get(in))) {
+        if (box->type == JP2_BOX_JP2C) {
+            found = 1;
+            break;
+        }
+        if (box->type == JP2_BOX_IHDR && !dec->ihdr) {
+            dec->ihdr = box;
+            box = 0;
+        } else if (box->type == JP2_BOX_BPCC && !dec->bpcc) {
+            dec->bpcc = box;
+            box = 0;
+        } else if (box->type == JP2_BOX_CDEF && !dec->cdef) {
+            dec->cdef = box;
+            box = 0;
+        } else if (box->type == JP2_BOX_PCLR && !dec->pclr) {
+            dec->pclr = box;
+            box = 0;
+        } else if (box->type == JP2_BOX_CMAP && !dec->cmap) {
+            dec->cmap = box;
+            box = 0;
+        } else if (box->type == JP2_BOX_COLR && !dec->colr) {
+            dec->colr = box;
+            box = 0;
+        }
+        if (box) {
+            jp2_box_destroy(box);
+            box = 0;
+        }
+        if (found) {
+            break;
+        }
+    }
+
+    if (!found) {
+        goto error;
+    }
+
+    if (!(dec->image = jpc_decode(in, optstr))) {
+        goto error;
+    }
+
+    if (!dec->ihdr) {
+        goto error;
+    }
+
+    // Security Fix: Ensure that box and dec are destroyed before returning image
+    image = dec->image;
+    dec->image = 0;
+
+    jp2_dec_destroy(dec);
+
+    return image;
+
+error:
+    if (box) {
+        jp2_box_destroy(box);
+    }
+    if (dec) {
+        jp2_dec_destroy(dec);
+    }
+    return 0;
+}
+```
+
+static inline void get_conn_text(const conn *c, const int af,
+                char* addr, struct sockaddr *sock_addr) {
+    char addr_text[MAXPATHLEN];
+    addr_text[0] = '\0';
+    const char *protoname = "?";
+    unsigned short port = 0;
+
+    switch (af) {
+        case AF_INET:
+            (void) inet_ntop(af,
+                    &((struct sockaddr_in *)sock_addr)->sin_addr,
+                    addr_text,
+                    sizeof(addr_text) - 1);
+            port = ntohs(((struct sockaddr_in *)sock_addr)->sin_port);
+            protoname = IS_UDP(c->transport) ? "udp" : "tcp";
+            break;
+
+        case AF_INET6:
+            addr_text[0] = '[';
+            addr_text[1] = '\0';
+            if (inet_ntop(af,
+                    &((struct sockaddr_in6 *)sock_addr)->sin6_addr,
+                    addr_text + 1,
+                    sizeof(addr_text) - 2)) {
+                strcat(addr_text, "]");
+            }
+            port = ntohs(((struct sockaddr_in6 *)sock_addr)->sin6_port);
+            protoname = IS_UDP(c->transport) ? "udp6" : "tcp6";
+            break;
+
+        case AF_UNIX:
+            strncpy(addr_text,
+                    ((struct sockaddr_un *)sock_addr)->sun_path,
+                    sizeof(addr_text) - 1);
+            addr_text[sizeof(addr_text)-1] = '\0';
+            protoname = "unix";
+            break;
+    }
+
+    if (strlen(addr_text) < 2) {
+        /* Most likely this is a connected UNIX-domain client which
+         * has no peer socket address, but there's no portable way
+         * to tell for sure.
+         */
+        snprintf(addr_text, MAXPATHLEN, "<AF %d>", af);
+    }
+
+    if (port) {
+        snprintf(addr, MAXPATHLEN, "%s:%s:%u", protoname, addr_text, port);
+    } else {
+        snprintf(addr, MAXPATHLEN, "%s:%s", protoname, addr_text);
+    }
+}
+
+static void parse_sec_attr_44(sc_file_t *file, const u8 *buf, size_t len)
+{
+	const int df_idx[8] = {SC_AC_OP_DELETE, SC_AC_OP_CREATE, SC_AC_OP_CREATE, SC_AC_OP_INVALIDATE, SC_AC_OP_REHABILITATE, SC_AC_OP_LOCK, SC_AC_OP_DELETE, -1};
+	const int ef_idx[8] = {SC_AC_OP_READ, SC_AC_OP_UPDATE, SC_AC_OP_WRITE, SC_AC_OP_INVALIDATE, SC_AC_OP_REHABILITATE, -1, SC_AC_OP_ERASE, -1};
+	const int efi_idx[8] = {SC_AC_OP_READ, SC_AC_OP_ERASE, SC_AC_OP_UPDATE, SC_AC_OP_INVALIDATE, SC_AC_OP_REHABILITATE, -1, SC_AC_OP_ERASE, -1};
+
+	u8		bValue;
+	int		i;
+	int		iKeyRef = 0;
+	int		iMethod;
+	int		iPinCount;
+	int		iOffset = 0;
+	int		iOperation;
+	const int*	p_idx;
+
+	while (len > 1) {
+		size_t iACLen   = buf[iOffset] & 0x0F;
+		if (iACLen > len)
+			break;
+
+		iMethod = SC_AC_NONE;
+
+		if (buf[iOffset] & 0x80) {
+			size_t	iParmLen = 1;
+			size_t	iKeyLen  = 0;
+
+			if (buf[iOffset]   & 0x20) iKeyLen++;
+			if (buf[iOffset+1] & 0x40) iParmLen++;
+			if (buf[iOffset+1] & 0x20) iParmLen++;
+			if (buf[iOffset+1] & 0x10) iParmLen++;
+			if (buf[iOffset+1] & 0x08) iParmLen++;
+
+			if(iKeyLen) {
+				int iSC;
+				if (len < 1+(size_t)iACLen)
+					break;
+				iSC = buf[iOffset+iACLen];
+
+				switch( (iSC>>5) & 0x03 ){
+				case 0:
+					iMethod = SC_AC_TERM;
+					break;
+				case 1:
+					iMethod = SC_AC_AUT;
+					break;
+				case 2:
+				case 3:
+					iMethod = SC_AC_PRO;
+					break;
+				}
+				iKeyRef = iSC & 0x1F;
+			}
+
+			if (iACLen > (1+iParmLen+iKeyLen)) {
+				if (len < 1+1+1+(size_t)iParmLen)
+					break;
+				iKeyRef = buf[iOffset+1+1+iParmLen];
+				iMethod = SC_AC_CHV;
+			}
+
+			if (len < 1+2)
+				break;
+			switch(buf[iOffset+2]){
+			case 0x2A:
+				iOperation = SC_AC_OP_CRYPTO;
+				break;
+			case 0x46:
+				iOperation = SC_AC_OP_UPDATE;
+				break;
+			default:
+				iOperation = SC_AC_OP_SELECT;
+				break;
+			}
+			sc_file_add_acl_entry(file, iOperation, iMethod, iKeyRef);
+		}
+		else {
+			switch (file->type) {
+			case SC_FILE_TYPE_DF:
+				p_idx = df_idx;
+				break;
+			case SC_FILE_TYPE_INTERNAL_EF:
+				p_idx = efi_idx;
+				break;
+			default:
+				p_idx = ef_idx;
+				break;
+			}
+
+			iPinCount = iACLen - 1;
+
+			if (buf[iOffset] & 0x20) {
+				int iSC;
+				if (len < 1 + (size_t)iACLen)
+					break;
+				iSC = buf[iOffset + iACLen];
+
+				switch( (iSC>>5) & 0x03 ) {
+				case 0:
+					iMethod = SC_AC_TERM;
+					break;
+				case 1:
+					iMethod = SC_AC_AUT;
+					break;
+				case 2:
+				case 3:
+					iMethod = SC_AC_PRO;
+					break;
+				}
+				iKeyRef = iSC & 0x1F;
+
+				iPinCount--;
+			}
+
+			if ( iPinCount > 0 ) {
+				if (len < 1 + 2)
+					break;
+				iKeyRef = buf[iOffset + 2];
+				iMethod = SC_AC_CHV;
+			}
+
+			bValue = buf[iOffset + 1];
+			for (i = 0; i < 8; i++) {
+				if((bValue & 1) && (p_idx[i] >= 0))
+					sc_file_add_acl_entry(file, p_idx[i], iMethod, iKeyRef);
+				bValue >>= 1;
+			}
+		}
+
+		iOffset += iACLen + 1;
+		len     -= iACLen + 1;
+	}
+}
+
+
+Function Name: do_core_note
+Code:
+int do_core_note(struct magic_set *ms, unsigned char *nbuf, uint32_t type,
+    int swap, uint32_t namesz, uint32_t descsz,
+    size_t noff, size_t doff, int *flags, size_t size, int clazz)
+{
+    int os_style = -1;
+
+    if (namesz >= 4 && strncmp((char *)&nbuf[noff], "CORE", 4) == 0) {
+        os_style = OS_STYLE_SVR4;
+    } else if (namesz >= 5 && strcmp((char *)&nbuf[noff], "CORE") == 0) {
+        os_style = OS_STYLE_SVR4;
+    } else if (namesz >= 8 && strcmp((char *)&nbuf[noff], "FreeBSD") == 0) {
+        os_style = OS_STYLE_FREEBSD;
+    } else if (namesz >= 11 && strncmp((char *)&nbuf[noff], "NetBSD-CORE", 11) == 0) {
+        os_style = OS_STYLE_NETBSD;
+    }
+
+    if (os_style != -1 && (*flags & FLAGS_DID_CORE_STYLE) == 0) {
+        if (file_printf(ms, ", %s-style", os_style_names[os_style]) == -1) {
+            return 1;
+        }
+        *flags |= FLAGS_DID_CORE_STYLE;
+        *flags |= os_style;
+    }
+
+    switch (os_style) {
+        case OS_STYLE_NETBSD:
+            if (type == NT_NETBSD_CORE_PROCINFO) {
+                // code block
+            }
+            break;
+
+        default:
+            if (type == NT_PRPSINFO && *flags & FLAGS_IS_CORE) {
+                // code block
+            }
+            break;
+    }
+    
+    return 0;
+}
+
+```c
+gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data, guint64 size)
+{
+  GstTagList *taglist;
+  guint16 blockcount, i;
+  gboolean content3D = FALSE;
+
+  struct
+  {
+    const gchar *interleave_name;
+    GstASF3DMode interleaving_type;
+  } stereoscopic_layout_map[] = {
+    {
+    "SideBySideRF", GST_ASF_3D_SIDE_BY_SIDE_HALF_RL}, {
+    "SideBySideLF", GST_ASF_3D_SIDE_BY_SIDE_HALF_LR}, {
+    "OverUnderRT", GST_ASF_3D_TOP_AND_BOTTOM_HALF_RL}, {
+    "OverUnderLT", GST_ASF_3D_TOP_AND_BOTTOM_HALF_LR}, {
+    "DualStream", GST_ASF_3D_DUAL_STREAM}
+  };
+  GST_INFO_OBJECT (demux, "object is an extended content description");
+
+  taglist = gst_tag_list_new_empty ();
+
+  /* Content Descriptor Count */
+  if (size < 2)
+    goto not_enough_data;
+
+  blockcount = gst_asf_demux_get_uint16 (&data, &size);
+
+  for (i = 1; i <= blockcount; ++i) {
+    const gchar *gst_tag_name;
+    guint16 datatype;
+    guint16 value_len;
+    guint16 name_len;
+    GValue tag_value = { 0, };
+    gsize in, out;
+    gchar *name;
+    gchar *name_utf8 = NULL;
+    gchar *value;
+
+    /* Descriptor */
+    if (!gst_asf_demux_get_string (&name, &name_len, &data, &size))
+      goto not_enough_data;
+
+    if (size < 2) {
+      g_free (name);
+      goto not_enough_data;
+    }
+    /* Descriptor Value Data Type */
+    datatype = gst_asf_demux_get_uint16 (&data, &size);
+
+    /* Descriptor Value (not really a string, but same thing reading-wise) */
+    if (!gst_asf_demux_get_string (&value, &value_len, &data, &size)) {
+      g_free (name);
+      goto not_enough_data;
+    }
+
+    name_utf8 =
+        g_convert (name, name_len, "UTF-8", "UTF-16LE", &in, &out, NULL);
+
+    if (name_utf8 != NULL) {
+      GST_DEBUG ("Found tag/metadata %s", name_utf8);
+
+      gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name_utf8);
+      GST_DEBUG ("gst_tag_name %s", GST_STR_NULL (gst_tag_name));
+
+      switch (datatype) {
+        case ASF_DEMUX_DATA_TYPE_UTF16LE_STRING:{
+          gchar *value_utf8;
+
+          value_utf8 = g_convert (value, value_len, "UTF-8", "UTF-16LE",
+              &in, &out, NULL);
+
+          /* get rid of tags with empty value */
+          if (value_utf8 != NULL && *value_utf8 != '\0') {
+            GST_DEBUG ("string value %s", value_utf8);
+
+            value_utf8[out] = '\0';
+
+            if (gst_tag_name != NULL) {
+              if (strcmp (gst_tag_name, GST_TAG_DATE_TIME) == 0) {
+                guint year = atoi (value_utf8);
+
+                if (year > 0) {
+                  g_value_init (&tag_value, GST_TYPE_DATE_TIME);
+                  g_value_take_boxed (&tag_value, gst_date_time_new_y (year));
+                }
+              } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
+                guint id3v1_genre_id;
+                const gchar *genre_str;
+
+                if (sscanf (value_utf8, "(%u)", &id3v1_genre_id) == 1 &&
+                    ((genre_str = gst_tag_id3_genre_get (id3v1_genre_id)))) {
+                  GST_DEBUG ("Genre: %s -> %s", value_utf8, genre_str);
+                  g_free (value_utf8);
+                  value_utf8 = g_strdup (genre_str);
+                }
+              } else {
+                GType tag_type;
+
+                /* convert tag from string to other type if required */
+                tag_type = gst_tag_get_type (gst_tag_name);
+                g_value_init (&tag_value, tag_type);
+                if (!gst_value_deserialize (&tag_value, value_utf8)) {
+                  GValue from_val = { 0, };
+
+                  g_value_init (&from_val, G_TYPE_STRING);
+                  g_value_set_string (&from_val, value_utf8);
+                  if (!g_value_transform (&from_val, &tag_value)) {
+                    GST_WARNING_OBJECT (demux,
+                        "Could not transform string tag to " "%s tag type %s",
+                        gst_tag_name, g_type_name (tag_type));
+                    g_value_unset (&tag_value);
+                  }
+                  g_value_unset (&from_val);
+                }
+              }
+            } else {
+              /* metadata ! */
+              GST_DEBUG ("Setting metadata");
+              g_value_init (&tag_value, G_TYPE_STRING);
+              g_value_set_string (&tag_value, value_utf8);
+              /* If we found a stereoscopic marker, look for StereoscopicLayout
+               * metadata */
+              if (content3D) {
+                guint i;
+                if (strncmp ("StereoscopicLayout", name_utf8,
+                        strlen (name_utf8)) == 0) {
+                  for (i = 0; i < G_N_ELEMENTS (stereoscopic_layout_map); i++) {
+                    if (g_str_equal (stereoscopic_layout_map[i].interleave_name,
+                            value_utf8)) {
+                      demux->asf_3D_mode =
+                          stereoscopic_layout_map[i].interleaving_type;
+                      GST_INFO ("find interleave type %u", demux->asf_3D_mode);
+                    }
+                  }
+                }
+                GST_INFO_OBJECT (demux, "3d type is %u", demux->asf_3D_mode);
+              } else {
+                demux->asf_3D_mode = GST_ASF_3D_NONE;
+                GST_INFO_OBJECT (demux, "None 3d type");
+              }
+            }
+          } else if (value_utf8 == NULL) {
+            GST_WARNING ("Failed to convert string value to UTF8, skipping");
+          } else {
+            GST_DEBUG ("Skipping empty string value for %s",
+                GST_STR_NULL (gst_tag_name));
+          }
+          g_free (value_utf8);
+          break;
+        }
+        case ASF_DEMUX_DATA_TYPE_BYTE_ARRAY:{
+          if (gst_tag_name) {
+            if (!g_str_equal (gst_tag_name, GST_TAG_IMAGE)) {
+              GST_FIXME ("Unhandled byte array tag %s",
+                  GST_STR_NULL (gst_tag_name));
+              break;
+            } else {
+              asf_demux_parse_picture_tag (taglist, (guint8 *) value,
+                  value_len);
+            }
+          }
+          break;
+        }
+        case ASF_DEMUX_DATA_TYPE_DWORD:{
+          guint uint_val = GST_READ_UINT32_LE (value);
+
+          /* this is the track number */
+          g_value_init (&tag_value, G_TYPE_UINT);
+
+          /* WM/Track counts from 0 */
+          if (!strcmp (name_utf8, "WM/Track"))
+            ++uint_val;
+
+          g_value_set_uint (&tag_value, uint_val);
+          break;
+        }
+          /* Detect 3D */
+        case ASF_DEMUX_DATA_TYPE_BOOL:{
+          gboolean bool_val = GST_READ_UINT32_LE (value);
+
+          if (strncmp ("Stereoscopic", name_utf8, strlen (name_utf8)) == 0) {
+            if (bool_val) {
+              GST_INFO_OBJECT (demux, "This is 3D contents");
+              content3D = TRUE;
+            } else {
+              GST_INFO_OBJECT (demux, "This is not 3D contenst");
+              content3D = FALSE;
+            }
+          }
+
+          break;
+        }
+        default:{
+          GST_DEBUG ("Skipping tag %s of type %d", gst_tag_name, datatype);
+          break;
+        }
+      }
+
+      if (G_IS_VALUE (&tag_value)) {
+        if (gst_tag_name) {
+          GstTagMergeMode merge_mode = GST_TAG_MERGE_APPEND;
+
+          /* WM/TrackNumber is more reliable than WM/Track, since the latter
+           * is supposed to have a 0 base but is often wrongly written to start
+           * from 1 as well, so prefer WM/TrackNumber when we have it: either
+           * replace the value added earlier from WM/Track or put it first in
+           * the list, so that it will get picked up by _get_uint() */
+          if (strcmp (name_utf8, "WM/TrackNumber") == 0)
+            merge_mode = GST_TAG_MERGE_REPLACE;
+
+          gst_tag_list_add_values (taglist, merge_mode, gst_tag_name,
+              &tag_value, NULL);
+        } else {
+          GST_DEBUG ("Setting global metadata %s", name_utf8);
+          gst_structure_set_value (demux->global_metadata, name_utf8,
+              &tag_value);
+        }
+
+        g_value_unset (&tag_value);
+      }
+    }
+
+    g_free (name);
+    g_free (value);
+    g_free (name_utf8);
+  }
+
+  gst_asf_demux_add_global_tags (demux, taglist);
+
+  return GST_FLOW_OK;
+
+  /* Errors */
+not_enough_data:
+  {
+    GST_WARNING ("Unexpected end of data parsing ext content desc object");
+    gst_tag_list_unref (taglist);
+    return GST_FLOW_ERROR;         /* not really fatal */
+  }
+}
+```
+
+ssize_t enc_untrusted_recvmsg(int sockfd, struct msghdr *msg, int flags) {
+  // CalculateTotalMessageSize function call here
+  size_t total_buffer_size = CalculateTotalMessageSize(msg);
+
+  MessageWriter input;
+  input.Push(sockfd);
+  input.Push<uint64_t>(msg->msg_namelen);
+  input.Push<uint64_t>(total_buffer_size);
+  input.Push<uint64_t>(msg->msg_controllen);
+  input.Push(msg->msg_flags);
+  input.Push(flags);
+
+  MessageReader output;
+
+  const auto status = NonSystemCallDispatcher(
+      ::asylo::host_call::kRecvMsgHandler, &input, &output);
+  CheckStatusAndParamCount(status, output, "enc_untrusted_recvmsg", 2,
+                           /*match_exact_params=*/false);
+
+  ssize_t result = output.next<ssize_t>();
+  int klinux_errno = output.next<int>();
+
+  // recvmsg() returns the number of characters received. On error, -1 is
+  // returned, with errno set to indicate the cause of the error.
+  if (result == -1) {
+    errno = FromkLinuxErrorNumber(klinux_errno);
+    return result;
+  }
+
+  auto msg_name_extent = output.next();
+  // The returned |msg_namelen| should not exceed the buffer size.
+  if (msg_name_extent.size() <= msg->msg_namelen) {
+    msg->msg_namelen = msg_name_extent.size();
+  }
+  memcpy(msg->msg_name, msg_name_extent.As<char>(), msg->msg_namelen);
+
+  // A single buffer is passed from the untrusted side, copy it into the
+  // scattered buffers inside the enclave.
+  auto msg_iov_extent = output.next();
+  size_t total_bytes = msg_iov_extent.size();
+  size_t bytes_copied = 0;
+  for (int i = 0; i < msg->msg_iovlen && bytes_copied < total_bytes; ++i) {
+    size_t bytes_to_copy =
+        std::min(msg->msg_iov[i].iov_len, total_bytes - bytes_copied);
+    memcpy(msg->msg_iov[i].iov_base, msg_iov_extent.As<char>() + bytes_copied,
+           bytes_to_copy);
+    bytes_copied += bytes_to_copy;
+  }
+
+  auto msg_control_extent = output.next();
+  // The returned |msg_controllen| should not exceed the buffer size.
+  if (msg_control_extent.size() <= msg->msg_controllen) {
+    msg->msg_controllen = msg_control_extent.size();
+  }
+  memcpy(msg->msg_control, msg_control_extent.As<char>(), msg->msg_controllen);
+
+  return result;
+}
+
+static Array HPHP::HHVM_METHOD(Memcache, getextendedstats,
+                         const String& /*type*/ /* = null_string */,
+                         int /*slabid*/ /* = 0 */, int /*limit*/ /* = 100 */) {
+  auto data = Native::data<MemcacheData>(this_);
+  memcached_return_t ret;
+  memcached_stat_st *stats;
+  
+  stats = memcached_stat(&data->m_memcache, "NULL", &ret);
+  if (ret != MEMCACHED_SUCCESS) {
+    return Array();
+  }
+
+  int server_count = memcached_server_count(&data->m_memcache);
+  
+  Array return_val;
+
+  for (int server_id = 0; server_id < server_count; server_id++) {
+    memcached_stat_st *stat;
+    char stats_key[INET6_ADDRSTRLEN + 6] = {0};
+    size_t key_len;
+
+    LMCD_SERVER_POSITION_INSTANCE_TYPE instance =
+      memcached_server_instance_by_position(&data->m_memcache, server_id);
+    const char *hostname = LMCD_SERVER_HOSTNAME(instance);
+    in_port_t port = LMCD_SERVER_PORT(instance);
+
+    stat = stats + server_id;
+
+    Array server_stats = memcache_build_stats(&data->m_memcache, stat, &ret);
+    if (ret != MEMCACHED_SUCCESS) {
+      continue;
+    }
+
+    key_len = snprintf(stats_key, sizeof(stats_key), "%s:%d", hostname, port);
+
+    return_val.set(String(stats_key, key_len, CopyString), server_stats);
+  }
+
+  free(stats);
+  return return_val;
+}
+

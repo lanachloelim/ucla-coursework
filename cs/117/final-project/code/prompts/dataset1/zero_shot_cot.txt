@@ -1,0 +1,6 @@
+Let's think about this problem step by step. You are given a function name and its code as shown below. First find the possible vulnerabilities and then rewrite the code to fix the vulnerabilities. Only output the code.
+Function Name: *func_name*
+Vulnerability: *vul_type*
+Code:
+*func_src_before*
+

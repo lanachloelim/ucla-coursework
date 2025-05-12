@@ -1,0 +1,22 @@
+The following function has a vulnerability of type *vul_type*. Generate the ten most vulnerable-prone code statements (with the line number) from the vulnerable function without any explanation. Then generate the corresponding fix to the line of code (if any) without any explanation.
+
+=== BEGIN RETURN TEMPLATE ===
+Line-level prediction:
+1. Line x:<code statement>
+2. Line y:<code statement>
+...
+10. Line z:<code statement>
+
+Line-level repair:
+1. Line x:<repaired code statement>
+2. Line y:<repaired code statement>
+...
+10. Line z:<repaired code statement>
+=== END RETURN REMPLATE ===
+
+=== BEGIN INPUT ===
+Function Name: *func_name*
+Vulnerability: *vul_type*
+Code:
+*func_src_before*
+=== END INPUT ===
