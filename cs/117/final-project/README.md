@@ -5,6 +5,7 @@
 ### Summary
 
 This project explores the use of Large Language Models (LLMs), specifically OpenAI's GPT-3.5-turbo, to automatically repair security vulnerabilities in code. By leveraging prompt engineering rather than fine-tuning, we aim to guide out-of-the-box LLMs to fix code vulnerabilities across multiple datasets. Our best prompt achieved over a 50% repair rate. We also introduce a semi-automatic evaluation system combining LLMs and human review for robust assessment of repairs.
+<img width="748" alt="Screenshot 2025-05-11 at 5 51 37 PM" src="https://github.com/user-attachments/assets/ee183b18-7f17-4918-a136-19e68e588347" />
 
 **Key Contributions:**
 - Evaluated prompt engineering strategies for vulnerability repair with LLMs.
