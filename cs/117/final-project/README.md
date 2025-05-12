@@ -21,7 +21,7 @@ This project explores the use of Large Language Models (LLMs), specifically Open
 - **Big-Vul**: C/C++ vulnerabilities from the CVE database, 91 vulnerability types, 3,754 vulnerabilities from 348 open-source GitHub projects.
 - **Vul4J**: Real-world Java vulnerabilities, each with a human patch and test cases for reproducibility.
 
-**Model from Hugging Face: Salesforce CodeT5** ([link](https://huggingface.co/Salesforce/codet5-small))
+**Model: Salesforce CodeT5 by Hugging Face** ([link](https://huggingface.co/Salesforce/codet5-small))
 - Used as a base for the semi-automatic evaluation tool. The decoder was replaced with a binary classification head to automatically assess whether code repairs were successful.
 
 ---
