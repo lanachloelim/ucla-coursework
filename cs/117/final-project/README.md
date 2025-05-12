@@ -13,7 +13,7 @@ This project explores the use of Large Language Models (LLMs), specifically Open
 - Developed a zero-shot vulnerability evaluation framework combining automatic and human evaluation.
 - Achieved a >50% repair rate using Few Shot Chain-of-Thought prompts.
 - Conducted ablation studies on false positives, adversarial attacks, and line-level repair.
-<img width="500" alt="Screenshot 2025-05-11 at 5 52 59 PM" src="https://github.com/user-attachments/assets/cc90d360-6864-4006-add9-88c419a9fc3d" />
+<img width="700" alt="Screenshot 2025-05-11 at 5 52 59 PM" src="https://github.com/user-attachments/assets/cc90d360-6864-4006-add9-88c419a9fc3d" />
 ---
 
 ### Resources
