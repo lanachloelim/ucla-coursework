@@ -1,6 +1,6 @@
 # UCLA COM SCI 161: Artificial Intelligence
 
-Assignments for COM SCI 161: Artificial Intelligence (Prof. Adnan Darwiche, UCLA Spring 2025).
+Assignments for COM SCI 161: Artificial Intelligence (Prof. Adnan Darwiche, UCLA Spring 2024).
 
 **Note:** Only includes coding-intensive or more challenging assignments, not the standard problem-based homeworks.
 
